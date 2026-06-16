@@ -29,4 +29,4 @@ EXPOSE 5800
 LABEL org.opencontainers.image.title="gcdmaster-web" \
       org.opencontainers.image.description="gcdmaster (cdrdao GUI) accessible from a web browser. Unofficial, not affiliated with the cdrdao or gcdmaster projects." \
       org.opencontainers.image.licenses="MIT" \
-      org.opencontainers.image.source="https://github.com/REPLACE_ME/docker-gcdmaster"
+      org.opencontainers.image.source="https://github.com/nnaqsoft/docker-gcdmaster"

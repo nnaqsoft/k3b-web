@@ -32,7 +32,7 @@ docker run -d \
   -v "$PWD/music:/storage:rw" \
   -e ENABLE_CJK_FONT=1 \
   -e DARK_MODE=1 \
-  REPLACE_ME/gcdmaster-web:latest
+  spoisseroux/gcdmaster-web:latest
 ```
 
 Then open **http://&lt;host&gt;:5800** in a browser.
@@ -204,7 +204,7 @@ docker build -t gcdmaster-web:local .
 # Multi-arch (requires buildx), build and push to your own repo:
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  -t REPLACE_ME/gcdmaster-web:latest \
+  -t spoisseroux/gcdmaster-web:latest \
   --push .
 ```
 

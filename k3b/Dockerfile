@@ -27,4 +27,4 @@ EXPOSE 5800
 LABEL org.opencontainers.image.title="k3b-web" \
       org.opencontainers.image.description="K3b (KDE CD/DVD burning suite) accessible from a web browser. Unofficial, not affiliated with the K3b project." \
       org.opencontainers.image.licenses="MIT" \
-      org.opencontainers.image.source="https://github.com/REPLACE_ME/docker-gcdmaster"
+      org.opencontainers.image.source="https://github.com/nnaqsoft/docker-gcdmaster"

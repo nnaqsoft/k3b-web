@@ -24,7 +24,7 @@ docker run -d \
   -v "$PWD/music:/storage:rw" \
   -e ENABLE_CJK_FONT=1 \
   -e DARK_MODE=1 \
-  REPLACE_ME/gcdmaster-web:latest
+  spoisseroux/gcdmaster-web:latest
 ```
 
 Open **http://&lt;host&gt;:5800**. The `/dev/sg0` value is an example; find yours with

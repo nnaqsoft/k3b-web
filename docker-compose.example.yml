@@ -7,9 +7,9 @@
 #      The sg number varies per host, so map the one that matches YOUR drive.
 #
 services:
-  gcdmaster:
-    image: spoisseroux/gcdmaster-web:latest
-    container_name: gcdmaster
+  k3b:
+    image: spoisseroux/k3b-web:latest
+    container_name: k3b
     ports:
       - "5800:5800"                  # open http://<host>:5800 in a browser
     devices:
@@ -17,17 +17,17 @@ services:
       - /dev/sg0:/dev/sg0            # SCSI-generic node (replace with YOUR sg node)
     volumes:
       - ./config:/config:rw          # persistent app settings
-      - ./music:/storage:rw          # your source audio files
+      - ./media:/storage:rw          # your source files and rip/image output
     environment:
       - ENABLE_CJK_FONT=1            # render Japanese/Chinese/Korean filenames
-      - DARK_MODE=1                  # dark web UI and GTK theme
+      - DARK_MODE=1                  # dark web UI and Qt theme (via adwaita-qt)
       - WEB_FILE_MANAGER=1           # browse /storage from the browser
       # - USER_ID=1000               # match the owner of your source files
       # - GROUP_ID=1000
       # - TZ=America/New_York
       # - SUP_GROUP_IDS=24           # manual fallback if device GID autodetect fails
-    # If DAO / CD-Text writes fail with SCSI permission errors even with the
-    # correct group, uncomment the next two lines to grant raw SCSI access.
+    # If burns/rips fail with SCSI permission errors even with the correct group,
+    # uncomment the next two lines to grant raw SCSI access.
     # cap_add:
     #   - SYS_RAWIO
     restart: unless-stopped

@@ -1,16 +1,16 @@
 #!/bin/sh
 #
-# Launch gcdmaster inside the noVNC desktop provided by jlesage/baseimage-gui.
+# Launch K3b inside the noVNC desktop provided by jlesage/baseimage-gui.
 #
-# gcdmaster is a GTK app that expects $HOME to be writable so it can store its
-# settings. Point HOME at the persisted /config volume so preferences survive
-# container restarts.
-#
+# HOME points at the persisted /config volume so K3b settings survive restarts.
 export HOME=/config
 
-# gcdmaster and its GSettings schema are installed under /usr/local (built from
-# source, see Dockerfile). Make sure both are found at runtime.
-export PATH="/usr/local/bin:$PATH"
-export GSETTINGS_SCHEMA_DIR="/usr/local/share/glib-2.0/schemas"
+# K3b warns (and mishandles non-ASCII filenames in data projects) when the locale
+# charset is not UTF-8. C.UTF-8 is always present on Debian and needs no locale-gen,
+# so set it unless the user supplied their own LANG via the base image.
+export LC_ALL="${LC_ALL:-C.UTF-8}"
 
-exec /usr/local/bin/gcdmaster
+# K3b is a KDE/Qt app and expects a D-Bus session bus; without one it logs
+# "Not connected to D-Bus server" and parts of the UI misbehave. dbus-run-session
+# starts a private session bus that lives for as long as K3b runs.
+exec dbus-run-session -- /usr/bin/k3b

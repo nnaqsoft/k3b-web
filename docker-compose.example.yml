@@ -10,6 +10,10 @@ services:
   k3b:
     image: spoisseroux/k3b-web:latest
     container_name: k3b
+    # Required for K3b to detect the drive: it lists drives via udisks2/udev, and
+    # the in-container udev daemon needs to write to /sys and the udev database.
+    # See the README "Drive detection requires elevated privileges" section.
+    privileged: true
     ports:
       - "5800:5800"                  # open http://<host>:5800 in a browser
     devices:
@@ -27,8 +31,10 @@ services:
       # - GROUP_ID=1000
       # - TZ=America/New_York
       # - SUP_GROUP_IDS=24           # manual fallback if device GID autodetect fails
-    # If burns/rips fail with SCSI permission errors even with the correct group,
-    # uncomment the next two lines to grant raw SCSI access.
+    # 'privileged: true' above already covers SCSI access. If you scope it down to
+    # capabilities instead, you need at least SYS_ADMIN (for udev) and often SYS_RAWIO
+    # (for raw SCSI writes):
     # cap_add:
+    #   - SYS_ADMIN
     #   - SYS_RAWIO
     restart: unless-stopped

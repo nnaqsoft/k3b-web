@@ -9,7 +9,15 @@ FROM jlesage/baseimage-gui:debian-12-v4.11.3
 # Theming / session helpers:
 #   adwaita-qt   : Qt theme so DARK_MODE=1 styles the K3b UI
 #   dbus-x11     : provides dbus-run-session for the per-session bus K3b expects
-RUN add-pkg k3b cdrdao dvd+rw-tools wodim adwaita-qt dbus-x11 fonts-wqy-zenhei
+# Drive detection stack (see rootfs/etc/cont-init.d/50-optical-stack.sh):
+#   dbus         : system bus daemon
+#   udev         : systemd-udevd + cdrom_id rule that stamps ID_CDROM on the drive
+#   udisks2      : the daemon Solid/K3b enumerate optical drives through
+# Localisation:
+#   fonts-wqy-zenhei : baked-in CJK font (no fragile runtime apt; see fix below)
+RUN add-pkg k3b cdrdao dvd+rw-tools wodim adwaita-qt dbus-x11 \
+            dbus udev udisks2 \
+            fonts-wqy-zenhei
 
 # dbus registers a dpkg-statoverride for the "messagebus" group, but the baseimage
 # rebuilds /etc/group at startup without it, leaving the override dangling so any
@@ -21,9 +29,11 @@ RUN dpkg-statoverride --list 2>/dev/null | grep -w messagebus | awk '{print $NF}
 COPY startapp.sh /startapp.sh
 RUN chmod +x /startapp.sh
 
-# Files copied into the container image (device-access env hook, etc.).
+# Files copied into the container image (device-access env hook, drive-detection
+# init script, etc.).
 COPY rootfs/ /
-RUN chmod +x /etc/cont-env.d/SUP_GROUP_IDS_INTERNAL
+RUN chmod +x /etc/cont-env.d/SUP_GROUP_IDS_INTERNAL \
+             /etc/cont-init.d/50-optical-stack.sh
 
 # App identity shown in the web UI.
 RUN set-cont-env APP_NAME "K3b"

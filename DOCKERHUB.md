@@ -21,6 +21,7 @@ at it.
 docker run -d \
   --name k3b \
   -p 5800:5800 \
+  --privileged \
   --device /dev/sr0:/dev/sr0 \
   --device /dev/sg0:/dev/sg0 \
   -v "$PWD/config:/config:rw" \
@@ -32,13 +33,18 @@ docker run -d \
 Open **http://&lt;host&gt;:5800**. The `/dev/sg0` value is an example; find yours with
 `cdrecord -scanbus` or `ls -l /dev/sg*` and map the node that matches your burner.
 
-## Devices
+## Devices and privileges
+
+**`--privileged` is required for K3b to detect the drive.** K3b lists drives via udisks2,
+which needs udev to have stamped `ID_CDROM` on the node; the image runs udev + a system
+D-Bus + udisksd at startup, and udev needs the privilege to write `/sys`. Without it the
+web UI still serves but no drive appears. To scope down, the minimum is
+`--cap-add SYS_ADMIN` plus the device (and often `--cap-add SYS_RAWIO` for raw SCSI).
 
 Map both the block device (`/dev/srN`) and its matching SCSI-generic node (`/dev/sgN`).
 The sg node is required for DAO/CD-Text/gap control and its number varies per host. Device
 group permissions are detected and applied automatically; if that fails, set
-`-e SUP_GROUP_IDS=<gid>` (from `ls -ln /dev/sr0`). If burns/rips hit SCSI permission errors
-anyway, add `--cap-add SYS_RAWIO`.
+`-e SUP_GROUP_IDS=<gid>` (from `ls -ln /dev/sr0`).
 
 ## Key environment variables
 

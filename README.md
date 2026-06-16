@@ -38,6 +38,7 @@ from any browser on your network.
 docker run -d \
   --name k3b \
   -p 5800:5800 \
+  --privileged \
   --device /dev/sr0:/dev/sr0 \
   --device /dev/sg0:/dev/sg0 \
   -v "$PWD/config:/config:rw" \
@@ -48,6 +49,8 @@ docker run -d \
 
 Then open **http://&lt;host&gt;:5800** in a browser.
 
+`--privileged` is required for K3b to detect the drive (see
+[Drive detection requires elevated privileges](#drive-detection-requires-elevated-privileges-important)).
 `/dev/sg0` above is an example. Your SCSI-generic node is almost certainly a different
 number. See [Finding your devices](#finding-your-devices) before you run this.
 
@@ -111,20 +114,33 @@ ls -ln /dev/sr0          # the 4th column is the owning GID, e.g. 24
 docker run ... -e SUP_GROUP_IDS=24 ...
 ```
 
-**Raw SCSI escalation.** Some hosts/drives require raw SCSI command capability. If burns or
-rips fail with permission or SCSI errors *even with the correct group*, add the capability:
+### Drive detection requires elevated privileges (important)
+
+K3b does not scan `/dev` itself. It lists drives through KDE Solid, whose only optical
+backend talks to **udisks2** over the system D-Bus, and udisks2 only recognises a node as
+an optical drive after **udev** has processed it and set the `ID_CDROM` property. A bare
+container has none of that, which is why K3b would otherwise report "No optical drive
+found" even when the device is fully reachable.
+
+This image solves that: at startup it runs `udev`, a system D-Bus, and `udisksd`
+(see [`/etc/cont-init.d/50-optical-stack.sh`](rootfs/etc/cont-init.d/50-optical-stack.sh)),
+so K3b can enumerate the drive. udevd needs to write to `/sys` and the udev database, so
+**the container must run with elevated privileges:**
 
 ```bash
-docker run ... --cap-add SYS_RAWIO ...
+docker run ... --privileged ... spoisseroux/k3b-web:latest
 ```
 
-As a last resort, `--privileged` always works but grants far more than needed. The image
-never requires privilege by default.
+`--privileged` is the simple, reliable option (and is the norm when an optical drive is
+passed through, e.g. inside a privileged LXC). If you prefer to scope it down, the minimum
+that works is `--cap-add SYS_ADMIN` plus the mapped device; some hosts/drives also need
+`--cap-add SYS_RAWIO` for raw SCSI writes. If you run unprivileged, the web UI still serves
+and the startup script logs that udevd could not start, but K3b will not detect the drive.
 
-> K3b discovers drives with its own device scanner (it probes the mapped `/dev/srN` and
-> `/dev/sgN` directly), so it does not need the host's udisks2/D-Bus daemon. You may see a
-> harmless `udisks2: Not connected to D-Bus server` line in the logs; it does not stop K3b
-> from finding a correctly mapped drive.
+> Lower-privilege alternative: instead of running udevd in the container, bind-mount the
+> host's already-populated udev database read-only with `-v /run/udev:/run/udev:ro` (the
+> host must have processed the drive). The startup script still brings up the system D-Bus
+> and udisksd, which then read the host's udev data.
 
 ---
 
